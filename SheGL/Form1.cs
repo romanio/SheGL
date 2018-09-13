@@ -21,8 +21,8 @@ namespace SheGL
             "#version 330 core\n" +
             "\n" +
             "layout (location=0) in vec3 position;\n" +
-            "layout (location=1) in float  U;\n" +
-            "out float Ux;\n" +
+            "layout (location=1) in float U;\n" +
+            "out float Ux;\n"+
             "uniform mat4 mvp;\n"+
             "void main(void)\n" +
             "{\n" +
@@ -34,7 +34,7 @@ namespace SheGL
             "#version 330 core\n" +
             "in float Ux;\n" +
             "out vec4 color;\n" +
-            "uniform sampler1D tSampler;\n" +
+            "uniform sampler1D tSampler; \n" +
             "\n" +
             "void main(void)\n" +
             "{\n" +
@@ -90,12 +90,12 @@ namespace SheGL
             GL.CompileShader(geometryShader);
             info = GL.GetShaderInfoLog(geometryShader);
             System.Diagnostics.Debug.WriteLine("Geometry Shader : " + info);
-    */
-    //
+            */
+            //
             var program = GL.CreateProgram();
             GL.AttachShader(program, vertexShader);
             GL.AttachShader(program, fragmentShader);
-     //       GL.AttachShader(program, geometryShader);
+            //GL.AttachShader(program, geometryShader);
             GL.LinkProgram(program);
 
             info = GL.GetProgramInfoLog(program);
@@ -103,10 +103,10 @@ namespace SheGL
 
             GL.DetachShader(program, vertexShader);
             GL.DetachShader(program, fragmentShader);
-//GL.DetachShader(program, geometryShader);
+            //GL.DetachShader(program, geometryShader);
             GL.DeleteShader(vertexShader);
             GL.DeleteShader(fragmentShader);
-           // GL.DeleteShader(geometryShader);
+            //GL.DeleteShader(geometryShader);
 
             return program;
         }
@@ -121,7 +121,7 @@ namespace SheGL
 
             float aspect = (float)glControl.Width / (float)glControl.Height;
             projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect, 1f, 10000);
-            modelview = Matrix4.LookAt(new Vector3(0, 0, -6), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
+            modelview = Matrix4.LookAt(new Vector3(+4, +4, -6), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
             mvp = modelview * projection;
             GL.UseProgram(_program);
 
@@ -138,19 +138,59 @@ namespace SheGL
 
 
         float[] points = {
-            -1.0f,  1.0f,  1.0f,  0.0f,
-            1.0f, 1.0f,  1.0f, 0.01f,
-            1.0f, -1.0f,  1.0f, 0.0f,
-            -1.0f, -1.0f, 1.0f, 0.01f
+            // front
+            -1.0f, -1.0f, 1.0f, 0.2f,
+            1.0f, -1.0f,  1.0f, 0.3f,
+            1.0f,  1.0f,  1.0f, 0.4f,
+            -1.0f,  1.0f,  1.0f, 0.2f,
+            // top
+            -1.0f,  1.0f,  1.0f, 0.2f,
+            1.0f,  1.0f,  1.0f, 0.13f,
+            1.0f,  1.0f, -1.0f, 0.18f,
+            -1.0f,  1.0f, -1.0f, 0.14f,
+            // back
+            1.0f, -1.0f, -1.0f, 0.6f,
+            -1.0f, -1.0f, -1.0f, 0.7f,
+            -1.0f,  1.0f, -1.0f, 0.72f,
+            1.0f,  1.0f, -1.0f, 0.76f,
+            // bottom
+            -1.0f, -1.0f, -1.0f, 0.4f,
+            1.0f, -1.0f, -1.0f, 0.2f,
+            1.0f, -1.0f,  1.0f, 0.5f,
+            -1.0f, -1.0f,  1.0f, 0.6f,
+            // left
+            -1.0f, -1.0f, -1.0f, 0.2f,
+            -1.0f, -1.0f,  1.0f, 0.1f,
+            -1.0f,  1.0f,  1.0f, 0.02f, 
+            -1.0f,  1.0f, -1.0f, 0.14f,
+            // right
+            1.0f, -1.0f,  1.0f, 0.8f,
+            1.0f, -1.0f, -1.0f, 0.9f,
+            1.0f,  1.0f, -1.0f, 0.82f,
+            1.0f,  1.0f,  1.0f, 0.2f,
         };
 
         uint[] indices = {
             //
             0, 1, 2,
-            0, 2, 3};
+            2, 3, 0,
+            4, 5, 6,
+            6, 7, 4,
+            8, 9, 10,
+            10, 11, 8,
+            12, 13, 14,
+            14, 15, 12,
+            16, 17, 18,
+            18, 19, 16,
+            20, 21, 22,
+            22, 23, 20
+        };
 
         private void GlControl_Load(object sender, EventArgs e)
         {
+            GL.Enable(EnableCap.CullFace);
+            //GL.CullFace(CullFaceMode.FrontAndBack);
+
             Text = "OpenGL Version " + GL.GetString(StringName.Version);
 
             System.Diagnostics.Debug.WriteLine("Remove " + GL.GetError().ToString());
@@ -174,9 +214,9 @@ namespace SheGL
 
             _program = CompileShaders();
 
-            Bitmap bmp = new Bitmap(12, 1);
-            for (int istep = 0; istep < 12; ++istep)
-                bmp.SetPixel(istep, 0, Color.FromArgb(255, 255 - istep*12, 0, istep*12));
+            Bitmap bmp = new Bitmap(256, 1);
+            for (int istep = 0; istep < 256; ++istep)
+                bmp.SetPixel(istep, 0, Color.FromArgb(255, 255 - istep, 0, istep));
 
             pictureBox1.BackgroundImage = bmp;
 
@@ -186,13 +226,13 @@ namespace SheGL
 
             GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            GL.TexImage1D(TextureTarget.Texture1D, 0, PixelInternalFormat.Rgba, 12, 0,
+            GL.TexImage1D(TextureTarget.Texture1D, 0, PixelInternalFormat.Rgba, 255, 0,
                 PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
             System.Diagnostics.Debug.WriteLine("Tex " + GL.GetError().ToString());
 
-            System.Drawing.Imaging.BitmapData data = bmp.LockBits(new Rectangle(0, 0, 12, 1), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            GL.TexSubImage1D(TextureTarget.Texture1D, 0, 0, 12, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            System.Drawing.Imaging.BitmapData data = bmp.LockBits(new Rectangle(0, 0, 255, 1), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            GL.TexSubImage1D(TextureTarget.Texture1D, 0, 0, 255, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
             bmp.UnlockBits(data);
 
             System.Diagnostics.Debug.WriteLine("Sub" + GL.GetError().ToString());
@@ -228,7 +268,7 @@ namespace SheGL
             GL.BindVertexArray(VAO);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            GL.DrawElements(BeginMode.Triangles, 6, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(BeginMode.Triangles, 36, DrawElementsType.UnsignedInt, 0);
 
             GL.BindVertexArray(0);
 
