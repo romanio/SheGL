@@ -21,20 +21,24 @@ namespace SheGL
             "#version 330 core\n" +
             "\n" +
             "layout (location=0) in vec3 position;\n" +
+            "layout (location=1) in float  U;\n" +
+            "out float Ux;\n" +
             "uniform mat4 mvp;\n"+
             "void main(void)\n" +
             "{\n" +
             "gl_Position = mvp * vec4(position, 1.0f);\n" +
+            "Ux = U;\n"+
             "}\n";
 
         string FragmentShader =
             "#version 330 core\n" +
-            "in vec4 in_color;\n" +
+            "in float Ux;\n" +
             "out vec4 color;\n" +
+            "uniform sampler1D tSampler;\n" +
             "\n" +
             "void main(void)\n" +
             "{\n" +
-            "   color = in_color;\n" +
+            "   color = texture(tSampler, Ux).rgba;\n" +
             "}\n";
 
         string GeometryShader =
@@ -80,16 +84,18 @@ namespace SheGL
             info = GL.GetShaderInfoLog(fragmentShader);
             System.Diagnostics.Debug.WriteLine("Fragment Shader : " + info);
             //
+            /*
             var geometryShader = GL.CreateShader(ShaderType.GeometryShader);
             GL.ShaderSource(geometryShader, GeometryShader);
             GL.CompileShader(geometryShader);
             info = GL.GetShaderInfoLog(geometryShader);
             System.Diagnostics.Debug.WriteLine("Geometry Shader : " + info);
-            //
+    */
+    //
             var program = GL.CreateProgram();
             GL.AttachShader(program, vertexShader);
             GL.AttachShader(program, fragmentShader);
-            GL.AttachShader(program, geometryShader);
+     //       GL.AttachShader(program, geometryShader);
             GL.LinkProgram(program);
 
             info = GL.GetProgramInfoLog(program);
@@ -97,10 +103,10 @@ namespace SheGL
 
             GL.DetachShader(program, vertexShader);
             GL.DetachShader(program, fragmentShader);
-            GL.DetachShader(program, geometryShader);
+//GL.DetachShader(program, geometryShader);
             GL.DeleteShader(vertexShader);
             GL.DeleteShader(fragmentShader);
-            GL.DeleteShader(geometryShader);
+           // GL.DeleteShader(geometryShader);
 
             return program;
         }
@@ -130,10 +136,10 @@ namespace SheGL
         int VBO, IBO, VAO;
 
         float[] points = {
-            -1.0f,  1.0f,  1.0f,
-            1.0f, 1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f, 1.0f
+            -1.0f,  1.0f,  1.0f,  0.0f,
+            1.0f, 1.0f,  1.0f, 0,2f,
+            1.0f, -1.0f,  1.0f, 0.3f,
+            -1.0f, -1.0f, 1.0f, 1.0f
         };
 
         uint[] indices = {
@@ -169,12 +175,17 @@ namespace SheGL
             System.Diagnostics.Debug.WriteLine("IBO  " + GL.GetError().ToString());
 
             GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, IntPtr.Zero);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
             GL.BindVertexArray(0);
 
-            System.Diagnostics.Debug.WriteLine("Vertex  " + GL.GetError().ToString());
+            GL.EnableVertexAttribArray(1);
+            System.Diagnostics.Debug.WriteLine("Vertex  1 Enable " + GL.GetError().ToString());
 
-            _program = CompileShaders();
+            GL.VertexAttribPointer(1, 1, VertexAttribPointerType.Float, false, 4 * sizeof(float), 3*sizeof(float));
+
+            System.Diagnostics.Debug.WriteLine("Vertex  1 Attrib  " + GL.GetError().ToString());
+
+1            _program = CompileShaders();
 
             System.Diagnostics.Debug.WriteLine("After Compile   " + GL.GetError().ToString());
 
@@ -197,7 +208,6 @@ namespace SheGL
 
             System.Diagnostics.Debug.WriteLine("Gen " + GL.GetError().ToString());
 
-            GL.BindTexture(TextureTarget.Texture1D, texture);
 
             System.Diagnostics.Debug.WriteLine("Bind " + GL.GetError().ToString());
 
@@ -217,6 +227,10 @@ namespace SheGL
             bmp.UnlockBits(data);
 
             System.Diagnostics.Debug.WriteLine("Sub" + GL.GetError().ToString());
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture1D, texture);
+
         }
 
         private void plOpenGL_MouseClick(object sender, MouseEventArgs e)
@@ -242,7 +256,7 @@ namespace SheGL
             GL.UseProgram(_program);
             GL.BindVertexArray(VAO);
 
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             GL.DrawElements(BeginMode.Triangles, 6, DrawElementsType.UnsignedInt, 0);
 
             GL.BindVertexArray(0);
