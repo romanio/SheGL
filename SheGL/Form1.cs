@@ -121,7 +121,7 @@ namespace SheGL
 
             float aspect = (float)glControl.Width / (float)glControl.Height;
             projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect, 1f, 10000);
-            modelview = Matrix4.LookAt(new Vector3(4, 1, -6), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
+            modelview = Matrix4.LookAt(new Vector3(0, 0, -6), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
             mvp = modelview * projection;
             GL.UseProgram(_program);
 
@@ -134,12 +134,14 @@ namespace SheGL
         int _program;
 
         int VBO, IBO, VAO;
+        int texture;
+
 
         float[] points = {
             -1.0f,  1.0f,  1.0f,  0.0f,
-            1.0f, 1.0f,  1.0f, 0,2f,
-            1.0f, -1.0f,  1.0f, 0.3f,
-            -1.0f, -1.0f, 1.0f, 1.0f
+            1.0f, 1.0f,  1.0f, 0.01f,
+            1.0f, -1.0f,  1.0f, 0.0f,
+            -1.0f, -1.0f, 1.0f, 0.01f
         };
 
         uint[] indices = {
@@ -149,87 +151,55 @@ namespace SheGL
 
         private void GlControl_Load(object sender, EventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Before  " + GL.GetError().ToString());
+            Text = "OpenGL Version " + GL.GetString(StringName.Version);
 
-            //
+            System.Diagnostics.Debug.WriteLine("Remove " + GL.GetError().ToString());
+
             VAO = GL.GenVertexArray();
-
-            System.Diagnostics.Debug.WriteLine("Gen VAO  " + GL.GetError().ToString());
-
             GL.BindVertexArray(VAO);
-
-            System.Diagnostics.Debug.WriteLine("VAO  " + GL.GetError().ToString());
-
             //
             VBO = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
             GL.BufferData(BufferTarget.ArrayBuffer, points.Length * sizeof(float), points, BufferUsageHint.StaticDraw);
-
-            System.Diagnostics.Debug.WriteLine("VBO  " + GL.GetError().ToString());
-
             //
             IBO = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, IBO);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
-            System.Diagnostics.Debug.WriteLine("IBO  " + GL.GetError().ToString());
-
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
-            GL.BindVertexArray(0);
 
             GL.EnableVertexAttribArray(1);
-            System.Diagnostics.Debug.WriteLine("Vertex  1 Enable " + GL.GetError().ToString());
-
             GL.VertexAttribPointer(1, 1, VertexAttribPointerType.Float, false, 4 * sizeof(float), 3*sizeof(float));
 
-            System.Diagnostics.Debug.WriteLine("Vertex  1 Attrib  " + GL.GetError().ToString());
+            _program = CompileShaders();
 
-1            _program = CompileShaders();
-
-            System.Diagnostics.Debug.WriteLine("After Compile   " + GL.GetError().ToString());
-
-            Text = "OpenGL Version " + GL.GetString(StringName.Version) + " " + _program;
-
-            GlControl_Resize(null, null);
-
-            // Generate 1D Color Texture
-            int texture;
-
-            Bitmap bmp = new Bitmap(256, 1);
-            for (int istep = 0; istep < 256; ++istep)
-                bmp.SetPixel(istep, 0, Color.FromArgb(255, 255 - istep, 0, istep));
+            Bitmap bmp = new Bitmap(12, 1);
+            for (int istep = 0; istep < 12; ++istep)
+                bmp.SetPixel(istep, 0, Color.FromArgb(255, 255 - istep*12, 0, istep*12));
 
             pictureBox1.BackgroundImage = bmp;
 
-            System.Diagnostics.Debug.WriteLine("Enable Cap  " + GL.GetError().ToString());
-
             texture = GL.GenTexture();
-
-            System.Diagnostics.Debug.WriteLine("Gen " + GL.GetError().ToString());
-
-
-            System.Diagnostics.Debug.WriteLine("Bind " + GL.GetError().ToString());
-
+            GL.BindTexture(TextureTarget.Texture1D, texture);
             GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
-
-            System.Diagnostics.Debug.WriteLine("Store " + GL.GetError().ToString());
 
             GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            GL.TexImage1D(TextureTarget.Texture1D, 0, PixelInternalFormat.Rgba, 256, 0,
+            GL.TexImage1D(TextureTarget.Texture1D, 0, PixelInternalFormat.Rgba, 12, 0,
                 PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
             System.Diagnostics.Debug.WriteLine("Tex " + GL.GetError().ToString());
 
-            System.Drawing.Imaging.BitmapData data = bmp.LockBits(new Rectangle(0, 0, 256, 1), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            GL.TexSubImage1D(TextureTarget.Texture1D, 0, 0, 256, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            System.Drawing.Imaging.BitmapData data = bmp.LockBits(new Rectangle(0, 0, 12, 1), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            GL.TexSubImage1D(TextureTarget.Texture1D, 0, 0, 12, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
             bmp.UnlockBits(data);
 
             System.Diagnostics.Debug.WriteLine("Sub" + GL.GetError().ToString());
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture1D, texture);
+
+            GlControl_Resize(null, null);
 
         }
 
@@ -247,6 +217,7 @@ namespace SheGL
         {
             GL.DeleteBuffer(VBO);
             GL.DeleteBuffer(IBO);
+            GL.DeleteTexture(texture);
         }
 
         private void GlControl_Paint(object sender, PaintEventArgs e)
