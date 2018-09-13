@@ -22,23 +22,34 @@ namespace SheGL
             "\n" +
             "layout (location=0) in vec3 position;\n" +
             "layout (location=1) in float U;\n" +
+            "layout (location=2) in vec3 bary_pos;\n"+
             "out float Ux;\n"+
+            "out vec3 Bx;\n"+
             "uniform mat4 mvp;\n"+
             "void main(void)\n" +
             "{\n" +
-            "gl_Position = mvp * vec4(position, 1.0f);\n" +
-            "Ux = U;\n"+
+            "  gl_Position = mvp * vec4(position, 1.0f);\n" +
+            "  Ux = U;\n"+
+            "  Bx = bary_pos;\n"+
             "}\n";
 
         string FragmentShader =
             "#version 330 core\n" +
             "in float Ux;\n" +
+            "in vec3 Bx;\n"+
             "out vec4 color;\n" +
             "uniform sampler1D tSampler; \n" +
             "\n" +
+            "float egde(){ \n"+
+            "vec3 d = fwidth(Bx);\n"+
+            "vec3 a3 = smoothstep(vec3(0.0), d * 1.5, Bx);\n"+
+            "return min(min(a3.x, a3.y), a3.z);\n"+
+            "}\n"+
             "void main(void)\n" +
             "{\n" +
-            "   color = texture(tSampler, Ux).rgba;\n" +
+            " color.rgb = mix(vec3(0.0), vec3(0.5), edge());\n"+
+            " color.a = 1.0;\n"+
+            //"   color = texture(tSampler, Ux).rgba;\n" +
             "}\n";
 
         string GeometryShader =
@@ -139,35 +150,35 @@ namespace SheGL
 
         float[] points = {
             // front
-            -1.0f, -1.0f, 1.0f, 0.2f,
-            1.0f, -1.0f,  1.0f, 0.3f,
-            1.0f,  1.0f,  1.0f, 0.4f,
-            -1.0f,  1.0f,  1.0f, 0.2f,
+            -1.0f, -1.0f, 1.0f, 1f, 1, 0, 0,
+            1.0f, -1.0f,  1.0f, 1f, 0, 1, 0,
+            1.0f,  1.0f,  1.0f, 1f, 0, 0, 1,
+            -1.0f,  1.0f,  1.0f, 1f, 0, 1, 0,
             // top
-            -1.0f,  1.0f,  1.0f, 0.2f,
-            1.0f,  1.0f,  1.0f, 0.13f,
-            1.0f,  1.0f, -1.0f, 0.18f,
-            -1.0f,  1.0f, -1.0f, 0.14f,
+            -1.0f,  1.0f,  1.0f, 0f,1, 0, 0,
+            1.0f,  1.0f,  1.0f, 0f,0, 1, 0,
+            1.0f,  1.0f, -1.0f, 0f, 0, 0, 1,
+            -1.0f,  1.0f, -1.0f, 0f,0, 1, 0,
             // back
-            1.0f, -1.0f, -1.0f, 0.6f,
-            -1.0f, -1.0f, -1.0f, 0.7f,
-            -1.0f,  1.0f, -1.0f, 0.72f,
-            1.0f,  1.0f, -1.0f, 0.76f,
+            1.0f, -1.0f, -1.0f, 0.6f,1, 0, 0,
+            -1.0f, -1.0f, -1.0f, 0.7f, 0, 1, 0,
+            -1.0f,  1.0f, -1.0f, 0.72f, 0, 0, 1,
+            1.0f,  1.0f, -1.0f, 0.76f, 0, 1, 0,
             // bottom
-            -1.0f, -1.0f, -1.0f, 0.4f,
-            1.0f, -1.0f, -1.0f, 0.2f,
-            1.0f, -1.0f,  1.0f, 0.5f,
-            -1.0f, -1.0f,  1.0f, 0.6f,
+            -1.0f, -1.0f, -1.0f, 0.4f,1, 0, 0,
+            1.0f, -1.0f, -1.0f, 0.2f, 0, 1, 0,
+            1.0f, -1.0f,  1.0f, 0.5f, 0, 0, 1,
+            -1.0f, -1.0f,  1.0f, 0.6f, 0, 1, 0,
             // left
-            -1.0f, -1.0f, -1.0f, 0.2f,
-            -1.0f, -1.0f,  1.0f, 0.1f,
-            -1.0f,  1.0f,  1.0f, 0.02f, 
-            -1.0f,  1.0f, -1.0f, 0.14f,
+            -1.0f, -1.0f, -1.0f, 0.2f,1, 0, 0,
+            -1.0f, -1.0f,  1.0f, 0.1f, 0, 1, 0,
+            -1.0f,  1.0f,  1.0f, 0.02f,  0, 0, 1,
+            -1.0f,  1.0f, -1.0f, 0.14f, 0, 1, 0,
             // right
-            1.0f, -1.0f,  1.0f, 0.8f,
-            1.0f, -1.0f, -1.0f, 0.9f,
-            1.0f,  1.0f, -1.0f, 0.82f,
-            1.0f,  1.0f,  1.0f, 0.2f,
+            1.0f, -1.0f,  1.0f, 0.8f,1, 0, 0,
+            1.0f, -1.0f, -1.0f, 0.9f, 0, 1, 0,
+            1.0f,  1.0f, -1.0f, 0.82f, 0, 0, 1,
+            1.0f,  1.0f,  1.0f, 0.2f, 0, 1, 0
         };
 
         uint[] indices = {
@@ -207,10 +218,13 @@ namespace SheGL
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
             GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 7 * sizeof(float), 0);
 
             GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 1, VertexAttribPointerType.Float, false, 4 * sizeof(float), 3*sizeof(float));
+            GL.VertexAttribPointer(1, 1, VertexAttribPointerType.Float, false, 7 * sizeof(float), 3*sizeof(float));
+
+            GL.EnableVertexAttribArray(2);
+            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, 7 * sizeof(float), 4 * sizeof(float));
 
             _program = CompileShaders();
 
@@ -224,8 +238,8 @@ namespace SheGL
             GL.BindTexture(TextureTarget.Texture1D, texture);
             GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
 
-            GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
             GL.TexImage1D(TextureTarget.Texture1D, 0, PixelInternalFormat.Rgba, 255, 0,
                 PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
