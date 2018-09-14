@@ -41,7 +41,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.plOpenGL.Location = new System.Drawing.Point(12, 12);
             this.plOpenGL.Name = "plOpenGL";
-            this.plOpenGL.Size = new System.Drawing.Size(590, 515);
+            this.plOpenGL.Size = new System.Drawing.Size(590, 482);
             this.plOpenGL.TabIndex = 0;
             this.plOpenGL.MouseClick += new System.Windows.Forms.MouseEventHandler(this.plOpenGL_MouseClick);
             // 
@@ -58,9 +58,9 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Location = new System.Drawing.Point(625, 228);
+            this.pictureBox1.Location = new System.Drawing.Point(481, 500);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(223, 27);
+            this.pictureBox1.Size = new System.Drawing.Size(416, 27);
             this.pictureBox1.TabIndex = 2;
             this.pictureBox1.TabStop = false;
             // 
